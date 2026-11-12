@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIN Colombia | Observatorio de Transición Energética & Riesgo Climático (2015–2026)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        bloomberg: {
+                            bg: '#0B0F19',
+                            card: '#111827',
+                            border: '#1F2937',
+                            accent: '#3B82F6',
+                            amber: '#F59E0B',
+                            emerald: '#10B981',
+                            rose: '#F43F5E',
+                            cyan: '#06B6D4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Personalización sutil de scrollbar para estética financiera/datos */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-[#0B0F19] dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+    <!-- Barra Superior Ejecutiva -->
+    <header class="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-md">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <!-- Título y Contexto -->
+            <div class="flex items-start sm:items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                            Transición Energética y Matriz Eléctrica en Colombia
+                        </h1>
+                        <span class="px-2 py-0.5 text-[11px] font-mono font-semibold uppercase tracking-wider rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                            SIN 2015–2026
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Evolución de Capacidad, Vulnerabilidad Climática (ENSO / El Niño) y Despacho Económico • Datos XM / UPME
+                    </p>
+                </div>
+            </div>
+
+            <!-- Controles Globales y Cambio de Tema -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <!-- Badge de Estado Climático Activo -->
+                <div id="climate-status-badge" class="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 border transition-all">
+                    <span class="w-2 h-2 rounded-full animate-pulse"></span>
+                    <span id="climate-status-text">Escenario Histórico Real</span>
+                </div>
+
+                <!-- Botón Modo Presentación / Tema -->
+                <button id="theme-toggle" type="button" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors" title="Alternar Tema Claro/Oscuro">
+                    <svg id="sun-icon" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <svg id="moon-icon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Barra de Filtros Interactivos -->
+    <section class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1523]">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                
+                <!-- Filtro 1: Rango / Año de Corte -->
+                <div class="md:col-span-4 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="year-slider" class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Año de Corte Analítico
+                        </label>
+                        <span id="year-display" class="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
+                            2026 (Proy.)
+                        </span>
+                    </div>
+                    <input id="year-slider" type="range" min="2015" max="2026" value="2026" step="1" class="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 dark:bg-slate-700 rounded-lg">
+                    <div class="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
+                        <span>2015 (Niño)</span>
+                        <span>2019</span>
+                        <span>2023-24 (Niño)</span>
+                        <span>2026</span>
+                    </div>
+                </div>
+
+                <!-- Filtro 2: Región / Área Operativa SIN -->
+                <div class="md:col-span-4 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <label for="region-select" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                        Sistema / Área Operativa
+                    </label>
+                    <select id="region-select" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <option value="SIN">SIN Nacional (Consolidado Colombia)</option>
+                        <option value="CARIBE">Área Caribe (Hub Solar/Eólico & Térmico Gas)</option>
+                        <option value="ANDINA">Área Andina / Antioquia-Centro (Núcleo Hídrico)</option>
+                        <option value="PACIFICA">Área Pacífica / Suroccidente (Hídrica & Biomasa)</option>
+                    </select>
+                </div>
+
+                <!-- Filtro 3: Escenario Climático (ENSO) -->
+                <div class="md:col-span-4 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                        Simulación Régimen Hidrológico (ENSO)
+                    </label>
+                    <div class="grid grid-cols-3 gap-1.5" role="group">
+                        <button type="button" data-scenario="HISTORICO" class="scenario-btn active px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all text-center">
+                            Serie Real / Normal
+                        </button>
+                        <button type="button" data-scenario="NINO" class="scenario-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all text-center">
+                            ☀️ Estrés El Niño
+                        </button>
+                        <button type="button" data-scenario="NINA" class="scenario-btn px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all text-center">
+                            🌧️ Superávit La Niña
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenedor Principal -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- 1. PANEL DE KPIs SUPERIORES DINÁMICOS -->
+        <section aria-label="Indicadores Clave de Desempeño" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            
+            <!-- KPI 1: Capacidad Instalada Total -->
+            <div class="bg-white dark:bg-[#111827] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500/40 transition-all relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Capacidad Efectiva Neta</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span id="kpi-capacity" class="text-3xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">21.45</span>
+                            <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">GW</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <span id="kpi-capacity-delta" class="font-mono font-medium text-emerald-600 dark:text-emerald-400">+38.4% vs 2015</span>
+                    <span class="text-slate-400">Base SIN: 15.5 GW (2015)</span>
+                </div>
+            </div>
+
+            <!-- KPI 2: % Fuentes No Convencionales (FNCER) -->
+            <div class="bg-white dark:bg-[#111827] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-emerald-500/40 transition-all relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Participación FNCER (Solar/Eólica)</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span id="kpi-fncer" class="text-3xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">14.8</span>
+                            <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">%</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <span id="kpi-fncer-delta" class="font-mono font-medium text-emerald-600 dark:text-emerald-400">▲ +14.2 pp desde Ley 1715</span>
+                    <span class="text-slate-400">Meta PND: 18-20%</span>
+                </div>
+            </div>
+
+            <!-- KPI 3: Nivel Agregado de Embalses -->
+            <div class="bg-white dark:bg-[#111827] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-cyan-500/40 transition-all relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Volumen Útil Embalses</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span id="kpi-reservoir" class="text-3xl font-bold font-mono tabular-nums text-cyan-600 dark:text-cyan-400">68.5</span>
+                            <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">%</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <span id="kpi-reservoir-status" class="font-mono font-medium text-cyan-600 dark:text-cyan-400">Zona de Seguridad (>55%)</span>
+                    <span class="text-slate-400">Mín. crítico: 27%</span>
+                </div>
+            </div>
+
+            <!-- KPI 4: Precio Promedio Bolsa Energía -->
+            <div class="bg-white dark:bg-[#111827] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-amber-500/40 transition-all relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Precio Promedio Bolsa</p>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span id="kpi-price" class="text-3xl font-bold font-mono tabular-nums text-amber-600 dark:text-amber-400">$285</span>
+                            <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">COP/kWh</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <span id="kpi-price-delta" class="font-mono font-medium text-amber-600 dark:text-amber-400">Despacho Marginal Mixto</span>
+                    <span class="text-slate-400">Escasez: ~$960/kWh</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. VISUALIZACIONES ANALÍTICAS PRINCIPALES -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- GRÁFICO A: Área Apilada - Evolución de Generación por Fuente (8 columnas) -->
+            <div class="lg:col-span-8 bg-white dark:bg-[#111827] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-blue-500/10 text-blue-500">FIG. 1 • COMPOSICIÓN TEMPORAL</span>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">Evolución de la Generación Eléctrica por Fuente (GWh/año)</h2>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Sustitución hídrica por despacho térmico durante eventos de El Niño (2015–2016 y 2023–2024) e irrupción FNCER desde 2022.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-1.5 self-start sm:self-center">
+                        <button id="toggle-stack-mode" class="px-2.5 py-1 text-xs font-mono rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+                            Ver en % (100%)
+                        </button>
+                    </div>
+                </div>
+                <div class="relative flex-1 min-h-[320px] w-full">
+                    <canvas id="generationAreaChart"></canvas>
+                </div>
+                <!-- Anotaciones analíticas al pie del gráfico -->
+                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-rose-500/80 shrink-0"></span>
+                        <span><strong>2015-16 & 2023-24:</strong> Picos térmicos (>35%) por déficit hídrico.</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-amber-400 shrink-0"></span>
+                        <span><strong>Inflexión 2023+:</strong> Entrada masiva de parques solares (El Paso, La Loma, Guayepo).</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-emerald-400 shrink-0"></span>
+                        <span><strong>Cuello de botella Eólico:</strong> Retrasos en líneas de transmisión Colectora (La Guajira).</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICO B: Burbujas Multivariable - LCOE vs Factor de Planta vs CO2 (4 columnas) -->
+            <div class="lg:col-
